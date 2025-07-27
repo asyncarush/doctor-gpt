@@ -6,6 +6,8 @@ if __name__ == "__main__":
         "https://www.health.harvard.edu/blog/wildfires-how-to-cope-when-smoke-affects-air-quality-and-health-202306232947",
         "https://www.health.harvard.edu/blog/what-is-a-psa-test-and-how-is-it-used-202507143101"
     ]
+
+    
 extract_articles(urls=urls)
 
 

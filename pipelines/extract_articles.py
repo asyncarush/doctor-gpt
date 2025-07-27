@@ -1,8 +1,13 @@
 from typing import List, Dict, Any
+
 import json
 from zenml import step, pipeline
+from model.articles import Articles
 from scrapper.webscraper import WebScraperFactoryImpl
 from loguru import logger
+
+
+from database.database import db
 
 @step
 def get_data(urls: List[str]) -> List[Dict[str, Any]]:
@@ -32,9 +37,34 @@ def save_to_json(data: List[Dict[str, Any]], filename: str = 'article_data.json'
     except Exception as e:
         print(f"Error saving to JSON: {str(e)}")
 
+@step
+def save_to_data_warehouse(articles: List[Articles]):
+    collection = db['articles']
+    try:
+        
+        # get all existing urls
+
+        existing_blogs = [ doc['url'] for doc in collection.find({}, {'url' : 1}) ]
+        
+        
+        new_articles = [ article for article in articles if article.url not in existing_blogs ]
+
+        if not new_articles:
+            logger.info("No new articles to save")
+            return
+
+        # Convert each Articles object to a dictionary
+        articles_dicts = [article.dict() for article in new_articles]
+        collection.insert_many(articles_dicts)
+        logger.info(f"Successfully saved {len(articles_dicts)} articles to MongoDB")
+    except Exception as e:
+        logger.error(f"Error saving to data warehouse: {str(e)}")
+        raise  # Re-raise the exception to fail the pipeline
 
 @pipeline(enable_cache=False)
 def extract_articles(urls: List[str]) -> None:
     logger.info("Going to Extract the Urls Data ....")
     articles = get_data(urls)
-    save_to_json(articles)
+    logger.info("Saving Data to warehouse")
+    save_to_data_warehouse(articles)
+
