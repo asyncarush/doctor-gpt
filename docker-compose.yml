@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  zenml-dashboard:
+    image: zenmldocker/zenml:latest
+    ports:
+      - "8237:8080"
+    environment:
+      - ZENML_STORE_URL=mysql://zenml:zenml@mysql:3306/zenml
+      - ZENML_DEFAULT_USER_NAME=default
+      - ZENML_DEFAULT_USER_PASSWORD=zenml
+      - ZENML_LOGGING_VERBOSITY=INFO
+    depends_on:
+      - mysql
+    volumes:
+      - zenml_artifacts:/app/zenml/artifacts
+    networks:
+      - zenml-network
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: zenml
+      MYSQL_USER: zenml
+      MYSQL_PASSWORD: zenml
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - zenml-network
+    command: --default-authentication-plugin=mysql_native_password
+
+networks:
+  zenml-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  zenml_artifacts:

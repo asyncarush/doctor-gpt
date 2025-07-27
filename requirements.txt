@@ -1,0 +1,5 @@
+requests>=2.31.0
+beautifulsoup4>=4.12.2
+zenml>=0.55.0
+python-dotenv>=1.0.0
+loguru
